@@ -25,11 +25,11 @@ def save_data(d):
 st.set_page_config(page_title="Zen Forest", layout="centered")
 data = load_data()
 
-# --- עיצוב משחקי משופר ---
+# --- עיצוב יער כהה וקריא ---
 st.markdown('''
 <style>
     .stApp {
-        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+        background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
                     url("https://images.unsplash.com/photo-1518137319011-8c88a1793ba9?q=80&w=2070");
         background-size: cover;
         background-attachment: fixed;
@@ -38,24 +38,22 @@ st.markdown('''
         background-color: rgba(255, 255, 255, 0.95);
         padding: 20px;
         border-radius: 20px;
-        border: 2px solid #4caf50;
         color: #1b5e20;
     }
-    h1 { color: #ffffff !important; text-shadow: 2px 2px 4px #000; text-align: center; font-size: 2.5rem; }
+    h1 { color: #ffffff !important; text-shadow: 2px 2px 4px #000; text-align: center; }
     .stButton>button {
         background-color: #2e7d32 !important;
         color: white !important;
         border-radius: 50px;
         height: 3.5em;
         font-weight: bold;
-        width: 100%;
     }
 </style>
 ''', unsafe_allow_html=True)
 
 st.title("🌿 יער הנדל''ן הקסום")
 
-# --- גרף קריסטלים (תיקון ה-Layout) ---
+# --- גרף קריסטלים (גרסה פשוטה ללא שגיאות) ---
 fig = go.Figure()
 colors = ['#81c784', '#ffb74d', '#4fc3f7', '#ba68c8', '#fff176']
 
@@ -63,21 +61,21 @@ for i, cat in enumerate(data['categories']):
     done_count = len([h for h in data['history'] if h['cat'] == cat])
     fig.add_trace(go.Bar(
         x=[cat], y=[max(done_count, 0.5)],
-        marker=dict(color=colors[i % len(colors)], line=dict(color='white', width=2)),
+        marker=dict(color=colors[i % len(colors)]),
         text="💎" if done_count > 0 else "🌱",
         textposition='inside',
         showlegend=False
     ))
 
-# תיקון השגיאה: הגדרת הנעילה בצורה מפורשת ופשוטה יותר
-fig.update_xaxes(fixedrange=True, tickfont=dict(color='white', size=14, bold=True))
+# הגדרות צירים פשוטות ביותר למניעת קריסה
+fig.update_xaxes(fixedrange=True, tickfont=dict(color='white', size=14))
 fig.update_yaxes(fixedrange=True, showticklabels=False, showgrid=False)
 fig.update_layout(
     height=350,
     margin=dict(t=10, b=10, l=10, r=10),
     paper_bgcolor='rgba(0,0,0,0)',
-    plot_bgcolor='rgba(255,255,255,0.1)',
-    dragmode=False # מבטל אפשרות גרירה וזום
+    plot_bgcolor='rgba(0,0,0,0)',
+    dragmode=False
 )
 
 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
@@ -87,7 +85,7 @@ st.markdown('<div class="main-box">', unsafe_allow_html=True)
 active_cats = [c for c in data['categories'] if data.get(c, {}).get('tasks')]
 
 if active_cats:
-    target = st.selectbox("מה כבשת עכשיו?", active_cats)
+    target = st.selectbox("מה כבשת?", active_cats)
     if st.button("סיימתי! 🚀"):
         task = data[target]['tasks'].pop(0)
         data['history'].append({"task": task['title'], "cat": target})
@@ -95,11 +93,11 @@ if active_cats:
         st.balloons()
         st.rerun()
 else:
-    st.write("היער מחכה למשימות חדשות... 🌱")
+    st.write("היער מחכה למשימות... 🌱")
 
-with st.expander("➕ שתילת משימה חדשה"):
+with st.expander("➕ שתילת משימה"):
     c_new = st.selectbox("תחום", data['categories'])
-    t_new = st.text_input("מה המשימה?")
+    t_new = st.text_input("משימה?")
     if st.button("שתול 🌱"):
         if t_new:
             if c_new not in data: data[c_new] = {"tasks": []}
@@ -109,7 +107,7 @@ with st.expander("➕ שתילת משימה חדשה"):
 st.markdown('</div>', unsafe_allow_html=True)
 
 # צ'אט
-if prompt := st.chat_input("דבר עם מדריך היער..."):
+if prompt := st.chat_input("דבר עם המדריך..."):
     with st.chat_message("user"): st.write(prompt)
     model = setup_ai()
     if model:
