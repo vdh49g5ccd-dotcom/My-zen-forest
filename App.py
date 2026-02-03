@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import json, os, plotly.graph_objects as go
 
-# --- 1. המפתח (נשאר ריק כאן כי הוא נמצא ב-Secrets) ---
+# --- 1. המפתח (נשאר ריק כי הוא נמצא ב-Secrets) ---
 API_KEY = ""
 
 def setup_ai():
@@ -12,13 +12,14 @@ def setup_ai():
         return None
     try:
         genai.configure(api_key=api_key)
-        # הנחיות למדריך: רך, מזמין ושואל שאלות
+        # הגדרת המדריך: רך, מזמין ומחבר בין נדל"ן לרוח
         instruction = """
         אתה המדריך של 'יער המשימות הקסום', מלווה רוחני ועסקי לאיש נדל"ן בירושלים.
         הגישה שלך רכה ומזמינה מאוד. אתה שואל שאלות מעוררות מחשבה במקום לתת פקודות.
         עזור למשתמש למצוא איזון בין עולם הנדל"ן (לידים, סגירות) לעולם הרוח (לימוד תורה) והנפש.
+        התמקד ב'צעד הבא הקטן' שאפשר לעשות ב-5 דקות.
         """
-        # השורה הקריטית: שימוש במודל gemini-1.5-flash
+        # שימוש במודל העדכני שמונע את שגיאת ה-NotFound
         return genai.GenerativeModel("gemini-1.5-flash", system_instruction=instruction)
     except:
         return None
@@ -38,7 +39,7 @@ def save_data(d):
 st.set_page_config(page_title="Zen Forest", layout="centered")
 data = load_data()
 
-# --- 3. עיצוב הממשק (נרות קטנים לאייפון) ---
+# --- 3. עיצוב הממשק (מותאם לאייפון) ---
 st.markdown('''
 <style>
     .stApp {
@@ -71,7 +72,7 @@ fig.update_yaxes(fixedrange=True, showticklabels=False, showgrid=False)
 fig.update_layout(height=180, margin=dict(t=5, b=5, l=5, r=5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', dragmode=False)
 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
-# --- 5. ממשק פעולה ---
+# --- 5. ממשק פעולה ושתילה ---
 st.markdown('<div class="main-box">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
@@ -102,10 +103,9 @@ if prompt := st.chat_input("דבר עם המדריך..."):
     model = setup_ai()
     if model:
         try:
-            # תיקון השורה שגרמה לשגיאה:
             res = model.generate_content(prompt)
             with st.chat_message("assistant"): st.write(res.text)
         except Exception as e:
-            st.error(f"המדריך נח כרגע... ({str(e)})")
+            st.error("המדריך נח כרגע... וודא שהמפתח ב-Secrets תקין.")
     else:
         st.info("אנא וודא שהמפתח (API_KEY) מוגדר ב-Secrets של Streamlit.")
