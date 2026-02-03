@@ -3,8 +3,7 @@ import google.generativeai as genai
 import json, os, plotly.graph_objects as go
 
 # הדבק כאן את המפתח הארוך שלך בתוך המרכאות
-API_KEY = "AIzaSyALaJM3c1Sjt8l-eWJlVM3horh4X-wkEPY"
-
+API_KEY = "AIzaSyAsZ8uf7z1sDOtpKJNZi27wWh0dOyJykpg"
 def setup_ai():
     try:
         genai.configure(api_key=API_KEY)
