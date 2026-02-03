@@ -4,7 +4,7 @@ import json, os, plotly.graph_objects as go
 
 # --- 1. המוח של ה-AI (הנחיות המדריך הרך) ---
 # כאן תדביק את המפתח שתייצר ב-Google AI Studio
-API_KEY == "AIzaSyALaJM3c1Sjt8l-eWJlVM3horh4X-wkEPY"
+API_KEY = "AIzaSyALaJM3c1Sjt8l-eWJlVM3horh4X-wkEPY"
 
 def setup_ai():
     if API_KEY == "הדבק_כאן_את_המפתח_שלך":
