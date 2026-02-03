@@ -2,24 +2,22 @@ import streamlit as st
 import google.generativeai as genai
 import json, os, plotly.graph_objects as go
 
-# --- 1. המוח של ה-AI (הנחיות המדריך הרך) ---
-# כאן תדביק את המפתח שתייצר ב-Google AI Studio
-API_KEY = 'AIzaSyALaJM3c1Sjt8l-eWJlVM3horh4X-wkEPY'
+# --- 1. הגדרת המפתח והמוח (מוטמע) ---
+API_KEY = "AIzaSyALaJM3c1Sjt8l-eWJlVM3horh4X-wkEPY"
 
 def setup_ai():
-    if API_KEY == "הדבק_כאן_את_המפתח_שלך":
-        return None
     try:
         genai.configure(api_key=API_KEY)
-        # כאן הכנסתי את הזהות שביקשת - רכה, שואלת ומאזנת
+        # הנחיות למדריך: רך, מזמין, שואל שאלות ומחבר בין נדל"ן לרוח
         instruction = """
-        אתה המדריך של 'יער המשימות הקסום', מלווה רוחני ועסקי לאיש נדל"ן.
-        הגישה שלך רכה ומזמינה, אתה שואל שאלות מעוררות מחשבה במקום לתת פקודות.
-        אתה עוזר למצוא איזון בין נדל"ן, לימוד תורה והתפתחות אישית.
-        התמקד בצעד הבא הקטן של 5 דקות.
+        אתה המדריך של 'יער המשימות הקסום', מלווה רוחני ועסקי לאיש נדל"ן בירושלים.
+        הגישה שלך רכה ומזמינה מאוד. אתה שואל שאלות מעוררות מחשבה במקום לתת פקודות.
+        עזור למשתמש למצוא איזון בין עולם הנדל"ן (לידים, סגירות) לעולם הרוח (לימוד תורה) והנפש.
+        התמקד ב'צעד הבא הקטן' שאפשר לעשות ב-5 דקות של שקט.
         """
         return genai.GenerativeModel("gemini-1.5-flash", system_instruction=instruction)
-    except: return None
+    except:
+        return None
 
 # --- 2. ניהול נתונים ---
 DATA_FILE = 'forest_data.json'
@@ -36,7 +34,7 @@ def save_data(d):
 st.set_page_config(page_title="Zen Forest", layout="centered")
 data = load_data()
 
-# --- 3. עיצוב הממשק ---
+# --- 3. עיצוב הממשק (מותאם לאייפון) ---
 st.markdown('''
 <style>
     .stApp {
@@ -45,13 +43,13 @@ st.markdown('''
         background-size: cover; background-attachment: fixed;
     }
     .main-box { background-color: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 15px; color: #1b5e20; }
-    .stButton>button { background-color: #2e7d32 !important; color: white !important; border-radius: 50px; }
+    .stButton>button { background-color: #2e7d32 !important; color: white !important; border-radius: 50px; width: 100%; }
 </style>
 ''', unsafe_allow_html=True)
 
 st.title("🌿 יער הנדל''ן הקסום")
 
-# --- 4. גרף נרות קטנים (צומצם ל-200 פיקסלים) ---
+# --- 4. גרף נרות קטנים (חסכון במקום במסך) ---
 fig = go.Figure()
 colors = ['#81c784', '#ffb74d', '#4fc3f7', '#ba68c8', '#fff176', '#f06292', '#4db6ac']
 
@@ -66,13 +64,12 @@ for i, cat in enumerate(data['categories']):
 
 fig.update_xaxes(fixedrange=True, tickfont=dict(color='white', size=12))
 fig.update_yaxes(fixedrange=True, showticklabels=False, showgrid=False)
-fig.update_layout(height=200, margin=dict(t=5, b=5, l=5, r=5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', dragmode=False)
+fig.update_layout(height=180, margin=dict(t=5, b=5, l=5, r=5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', dragmode=False)
 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 # --- 5. ממשק פעולה ושתילה ---
 st.markdown('<div class="main-box">', unsafe_allow_html=True)
 
-# ביצוע משימה
 active_cats = [c for c in data['categories'] if data.get(c, {}).get('tasks')]
 if active_cats:
     target = st.selectbox("מה כבשת עכשיו?", active_cats)
@@ -83,27 +80,24 @@ if active_cats:
         st.balloons()
         st.rerun()
 
-# הוספת משימה או קטגוריה חדשה
 col1, col2 = st.columns(2)
 with col1:
-    with st.expander("🌱 משימה חדשה"):
-        c_task = st.selectbox("באיזה תחום?", data['categories'])
+    with st.expander("🌱 משימה"):
+        c_task = st.selectbox("תחום", data['categories'])
         t_task = st.text_input("מה המשימה?")
-        if st.button("שתול משימה"):
+        if st.button("שתול"):
             if t_task:
                 if c_task not in data: data[c_task] = {"tasks": []}
                 data[c_task]['tasks'].append({"title": t_task})
                 save_data(data)
                 st.rerun()
-
 with col2:
-    with st.expander("✨ קטגוריה חדשה"):
-        new_cat = st.text_input("שם הקטגוריה (למשל: שוק ההון)")
-        if st.button("צור נר חדש"):
+    with st.expander("✨ קטגוריה"):
+        new_cat = st.text_input("שם (למשל: שוק ההון)")
+        if st.button("צור נר"):
             if new_cat and new_cat not in data['categories']:
                 data['categories'].append(new_cat)
                 save_data(data)
-                st.success(f"הנר {new_cat} נוסף ליער!")
                 st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -116,7 +110,7 @@ if prompt := st.chat_input("דבר עם המדריך..."):
         try:
             res = model.generate_content(f"מצב יער: {data}. משתמש: {prompt}")
             with st.chat_message("assistant"): st.write(res.text)
-        except Exception as e:
-            st.error("המדריך נח כרגע (בדוק API Key או מכסה).")
+        except:
+            st.error("המדריך יצא להפסקה קצרה... (בדוק מכסה או חיבור)")
     else:
-        st.info("כדי שהמדריך יענה, עליך להדביק את ה-API Key בקוד ב-GitHub.")
+        st.info("המערכת ממתינה לחיבור ה-AI...")
