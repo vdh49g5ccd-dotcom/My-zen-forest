@@ -2,19 +2,25 @@ import streamlit as st
 import google.generativeai as genai
 import json, os, plotly.graph_objects as go
 
-# --- הגדרות בסיסיות ---
-API_KEY = "" # נשאר ריק, המפתח ב-Secrets
+# --- 1. הגדרות בסיסיות ---
+# השאר את זה ריק, המפתח נמשך מה-Secrets
+API_KEY = ""
 
 def setup_ai():
+    # משיכת המפתח מהכספת של Streamlit
     api_key = st.secrets.get("API_KEY")
-    if not api_key: return None
+    if not api_key:
+        return None
     try:
         genai.configure(api_key=api_key)
-        instruction = "אתה מדריך רך ומזמין לאיש נדל''ן בירושלים. ענה בקצרה וברוגע."
+        # הנחיות למדריך: רך, מזמין ושואל שאלות
+        instruction = "אתה מדריך רך ומזמין לאיש נדל''ן בירושלים. ענה בקצרה וברוגע ושאל שאלות."
+        # שימוש במודל gemini-1.5-flash פותר את שגיאת ה-NotFound
         return genai.GenerativeModel("gemini-1.5-flash", system_instruction=instruction)
-    except: return None
+    except:
+        return None
 
-# --- ניהול נתונים ---
+# --- 2. ניהול נתונים ---
 DATA_FILE = 'forest_data.json'
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -28,36 +34,57 @@ def save_data(d):
 
 data = load_data()
 
-# --- תצוגת נרות (Plotly) ---
+# --- 3. תצוגת נרות (הגרף שרצית) ---
 st.title("🌿 יער הנדל''ן הקסום")
 
+# יצירת גרף הנרות
 fig = go.Figure()
-for cat in data['categories']:
-    count = len([h for h in data['history'] if h['cat'] == cat])
-    fig.add_trace(go.Bar(x=[cat], y=[max(count, 0.2)], name=cat))
+colors = ['#81c784', '#ffb74d', '#4fc3f7', '#ba68c8']
 
-fig.update_layout(height=200, margin=dict(t=5, b=5, l=5, r=5), showlegend=False)
+for i, cat in enumerate(data['categories']):
+    # ספירת משימות שבוצעו בכל קטגוריה
+    done_count = len([h for h in data['history'] if h['cat'] == cat])
+    fig.add_trace(go.Bar(
+        x=[cat], 
+        y=[max(done_count, 0.5)], # גובה מינימלי כדי שהנר ייראה
+        marker=dict(color=colors[i % len(colors)]),
+        name=cat
+    ))
+
+fig.update_layout(
+    height=250, 
+    margin=dict(t=10, b=10, l=10, r=10), 
+    paper_bgcolor='rgba(0,0,0,0)', 
+    plot_bgcolor='rgba(0,0,0,0)',
+    showlegend=False
+)
 st.plotly_chart(fig, use_container_width=True)
 
-# --- הוספת משימה וקטגוריה ---
+# --- 4. הוספת משימה וקטגוריה ---
+st.markdown("---")
 col1, col2 = st.columns(2)
 with col1:
     with st.expander("🌱 משימה חדשה"):
-        c = st.selectbox("תחום", data['categories'])
-        t = st.text_input("מה לעשות?")
-        if st.button("שתול"):
-            data['history'].append({"task": t, "cat": c})
-            save_data(data)
-            st.rerun()
+        c = st.selectbox("בחר תחום", data['categories'])
+        t = st.text_input("מה המשימה?")
+        if st.button("שתול משימה"):
+            if t:
+                data['history'].append({"task": t, "cat": c})
+                save_data(data)
+                st.success("נשתל!")
+                st.rerun()
+
 with col2:
     with st.expander("✨ קטגוריה חדשה"):
         n = st.text_input("שם הקטגוריה")
-        if st.button("הוסף"):
-            data['categories'].append(n)
-            save_data(data)
-            st.rerun()
+        if st.button("הוסף נר"):
+            if n and n not in data['categories']:
+                data['categories'].append(n)
+                save_data(data)
+                st.rerun()
 
-# --- צ'אט עם המדריך ---
+# --- 5. צ'אט עם המדריך ---
+st.markdown("---")
 prompt = st.chat_input("דבר עם המדריך...")
 if prompt:
     st.chat_message("user").write(prompt)
@@ -66,4 +93,7 @@ if prompt:
         try:
             res = model.generate_content(prompt)
             st.chat_message("assistant").write(res.text)
-        except: st.error("המדריך נח... בדוק API Key.")
+        except Exception as e:
+            st.error(f"המדריך נח... (שגיאה: {str(e)})")
+    else:
+        st.info("אנא וודא שהמפתח (API_KEY) נמצא ב-Secrets.")
